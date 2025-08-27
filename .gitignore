@@ -6,12 +6,6 @@ target/
 *.iml
 *.class
 
-### Maven ###
-.mvn/timing.properties
-.mvn/wrapper/maven-wrapper.jar
-.mvn/wrapper/maven-wrapper.properties
-.mvn/wrapper/MavenWrapperDownloader.java
-
 ### Gradle (jeśli ktoś uruchomi build gradlowy) ###
 .gradle/
 build/
