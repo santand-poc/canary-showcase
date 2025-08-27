@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="pl">
+<head>
+    <meta charset="utf-8"/>
+    <title>Canary Showcase</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <style>
+        body { font-family: system-ui, Segoe UI, Roboto, sans-serif; margin: 24px; }
+        .row { display:flex; gap:8px; align-items:center; margin-bottom:12px; flex-wrap: wrap; }
+        button, input { padding:8px 12px; border:1px solid #ddd; border-radius:8px; background:white; }
+        .pill { padding:4px 10px; border-radius:999px; background:#f3f6fa; }
+        .card { border:1px solid #eee; border-radius:12px; padding:16px; margin-top:12px; }
+        h2 { margin: 0 0 8px 0; }
+        label { font-size: 12px; color:#666; }
+    </style>
+</head>
+<body>
+<h2>Canary Showcase — error-rate / p95 / diff-rate + Feign</h2>
+
+<div class="row">
+    <button onclick="post('/ui/start')">Start traffic</button>
+    <button onclick="post('/ui/stop')">Stop</button>
+    <span>Canary %:</span>
+    <input id="pct" type="number" min="0" max="100" value="1" style="width:80px"/>
+    <button onclick="setPct()">Ustaw</button>
+    <button onclick="autopilot(true)">Autopilot ON</button>
+    <button onclick="autopilot(false)">Autopilot OFF</button>
+</div>
+
+<div class="card">
+    <div class="row">
+        <div>
+            <div><label>Error rate (canary, 30s)</label></div>
+            <div id="er" class="pill">—</div>
+        </div>
+        <div>
+            <div><label>p95 /consumer/do (ms, 30s)</label></div>
+            <div id="p95" class="pill">—</div>
+        </div>
+        <div>
+            <div><label>Diff rate decision_delta (30s)</label></div>
+            <div id="dr" class="pill">—</div>
+        </div>
+        <div>
+            <div><label>Guard</label></div>
+            <div id="guard" class="pill">—</div>
+        </div>
+        <div>
+            <div><label>Canary %</label></div>
+            <div id="pctNow" class="pill">—</div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="row">
+        <span>Wstrzyknij zakłócenia (na Producencie):</span>
+        <label>err%</label><input id="err" type="number" step="0.1" value="0" style="width:80px"/>
+        <label>latency ms</label><input id="lat" type="number" step="10" value="0" style="width:100px"/>
+        <label>diff%</label><input id="diff" type="number" step="1" value="0" style="width:80px"/>
+        <label>sek</label><input id="sec" type="number" step="1" value="30" style="width:80px"/>
+        <button onclick="inject()">Inject</button>
+    </div>
+</div>
+
+<pre id="log"></pre>
+
+<script>
+    async function post(url){ await fetch(url,{method:'POST'}); }
+    async function setPct(){
+        const pct = document.getElementById('pct').value;
+        await fetch('/ui/percent?pct='+pct,{method:'POST'});
+    }
+    async function inject(){
+        const err = document.getElementById('err').value/100.0;
+        const lat = document.getElementById('lat').value;
+        const diff = document.getElementById('diff').value/100.0;
+        const sec = document.getElementById('sec').value;
+        await fetch(`/ui/inject?err=${err}&latencyMs=${lat}&diff=${diff}&sec=${sec}`,{method:'POST'});
+    }
+    async function autopilot(on){ await fetch('/ui/autopilot?on='+on,{method:'POST'}); }
+    async function tick(){
+        const r = await fetch('/ui/status'); const j = await r.json();
+        document.getElementById('er').textContent = isFinite(j.errorRatePct)? j.errorRatePct.toFixed(2)+'%' : '—';
+        document.getElementById('p95').textContent = isFinite(j.p95ms)? j.p95ms.toFixed(0)+' ms' : '—';
+        document.getElementById('dr').textContent = isFinite(j.diffRatePct)? j.diffRatePct.toFixed(2)+'%' : '—';
+        document.getElementById('guard').textContent = j.guard + (j.guardNote? ' ('+j.guardNote+')':'');
+        document.getElementById('pctNow').textContent = j.canaryPercent + '%';
+        const line = `[${new Date().toLocaleTimeString()}] autopilot=${j.autopilot} canary=${j.canaryPercent}% guard=${j.guard} er=${document.getElementById('er').textContent} p95=${document.getElementById('p95').textContent} dr=${document.getElementById('dr').textContent}`;
+        const log = document.getElementById('log');
+        log.textContent = `${line}\n${log.textContent}`.slice(0, 8000);
+    }
+    setInterval(tick, 1000); tick();
+</script>
+</body>
+</html>

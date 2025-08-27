@@ -1,0 +1,27 @@
+server:
+  port: 8080
+
+producer:
+  url: http://localhost:9090
+
+management:
+  endpoints.web.exposure.include: health,info,metrics,prometheus
+  metrics:
+    tags:
+      service: consumer-service
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+        http.client.requests: true
+      percentiles:
+        http.server.requests: 0.95
+        http.client.requests: 0.95
+
+canary:
+  expr: >
+    error_rate('consumer-service','release.new_rules_v2','canary','30s') < 0.8
+    && p95('consumer-service','/consumer/do','30s') < 400
+    && diff_rate('decision_delta','30s') < 10
+  ladder: [1,5,25,100]
+  passStreak: 2
+  timeoutMs: 50

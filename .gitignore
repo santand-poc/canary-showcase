@@ -1,0 +1,47 @@
+### Java / Spring Boot ###
+target/
+*.jar
+*.war
+*.ear
+*.iml
+*.class
+
+### Maven ###
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+.mvn/wrapper/maven-wrapper.properties
+.mvn/wrapper/MavenWrapperDownloader.java
+
+### Gradle (jeśli ktoś uruchomi build gradlowy) ###
+.gradle/
+build/
+
+### Logs ###
+*.log
+logs/
+*.out
+
+### IntelliJ IDEA ###
+.idea/
+*.iws
+*.ipr
+*.iml
+out/
+
+### Eclipse ###
+.project
+.classpath
+.settings/
+bin/
+
+### VS Code ###
+.vscode/
+
+### OS crap ###
+.DS_Store
+Thumbs.db
+
+### Test / tmp ###
+hs_err_pid*
+replay_pid*
+tmp/
